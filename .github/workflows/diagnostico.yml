@@ -1,0 +1,21 @@
+name: Diagnóstico do token do Instagram
+
+on:
+  workflow_dispatch: {} # rodar manualmente: mostra a qual conta o token pertence (não imprime o token)
+
+jobs:
+  quem-sou-eu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perguntar ao Instagram quem é o dono do token
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: |
+          echo "ID gravado em IG_USER_ID: ${#IG_USER_ID} caracteres, começa com ${IG_USER_ID:0:6}"
+          echo "--- /me (dono do token)"
+          curl -s -G "https://graph.instagram.com/v21.0/me" --data-urlencode "fields=user_id,username,account_type" --data-urlencode "access_token=$IG_ACCESS_TOKEN"
+          echo
+          echo "--- /{IG_USER_ID} (o ID gravado)"
+          curl -s -G "https://graph.instagram.com/v21.0/$IG_USER_ID" --data-urlencode "fields=username,account_type" --data-urlencode "access_token=$IG_ACCESS_TOKEN"
+          echo
