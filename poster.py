@@ -100,6 +100,8 @@ def main():
         entry = state.setdefault(item["id"], {})
         if entry.get("posted"):
             continue
+        if not item.get("approved"):  # regra do José: nada é publicado sem aprovação explícita dele
+            continue
         if datetime.datetime.fromisoformat(item["date"].replace("Z", "+00:00")) > now:
             continue
         try:

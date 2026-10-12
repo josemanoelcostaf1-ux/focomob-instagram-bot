@@ -27,6 +27,9 @@ via GitHub Actions (confere a cada 15 minutos). Mesmo padrão do robô do Seu Z�
    (`GH_PAT` = token fine-grained do GitHub só deste repositório, com permissão *Secrets: Read and write*; é ele que permite
    ao robô renovar o token do Instagram sozinho.)
 
+## Regra de aprovação
+Cada item de `queue.json` só é publicado se tiver `"approved": true`. Esse campo só é ligado depois que o José aprovar a peça (vídeo, legenda e, nos Reels, a capa) **naquele item específico**. Item sem `approved` fica parado na fila.
+
 ## Publicar algo novo
 Acrescentar um item em `queue.json` (e a mídia em `media/`; para Reels, sempre com `"cover": "media/capa-....png"`, capa validada pelo José antes), fazer commit e push. Para publicar na hora, rodar o workflow
 manualmente (aba Actions > "Publicar no Instagram da Focomob" > Run workflow).
