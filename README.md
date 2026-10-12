@@ -28,7 +28,7 @@ via GitHub Actions (confere a cada 15 minutos). Mesmo padrão do robô do Seu Z�
    ao robô renovar o token do Instagram sozinho.)
 
 ## Publicar algo novo
-Acrescentar um item em `queue.json` (e a mídia em `media/`), fazer commit e push. Para publicar na hora, rodar o workflow
+Acrescentar um item em `queue.json` (e a mídia em `media/`; para Reels, sempre com `"cover": "media/capa-....png"`, capa validada pelo José antes), fazer commit e push. Para publicar na hora, rodar o workflow
 manualmente (aba Actions > "Publicar no Instagram da Focomob" > Run workflow).
 
 Teste sem publicar nada: `DRY_RUN=1 python poster.py`.

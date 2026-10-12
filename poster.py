@@ -78,7 +78,8 @@ def wait_ready(container_id, tries=36, every=10):
 def build_container(item):
     t, cap = item["type"], item.get("caption", "")
     if t == "reel":
-        return call("POST", f"{IG_USER_ID}/media", media_type="REELS", video_url=url(item["media"]), caption=cap, share_to_feed="true")["id"]
+        extra = {"cover_url": url(item["cover"])} if item.get("cover") else {}  # capa validada (imagem em media/)
+        return call("POST", f"{IG_USER_ID}/media", media_type="REELS", video_url=url(item["media"]), caption=cap, share_to_feed="true", **extra)["id"]
     if t == "image":
         return call("POST", f"{IG_USER_ID}/media", image_url=url(item["media"]), caption=cap)["id"]
     if t == "carousel":
