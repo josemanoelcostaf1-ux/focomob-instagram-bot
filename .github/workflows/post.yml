@@ -1,0 +1,36 @@
+name: Publicar no Instagram da Focomob
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # confere a cada 15 min se algum item do queue.json venceu
+  workflow_dispatch: {} # permite rodar na hora pela aba Actions
+
+concurrency: publicar # nunca duas execuções ao mesmo tempo (evita publicar em duplicidade)
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: python poster.py
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+
+      - name: Salvar estado das publicações
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || git commit -m "Atualiza estado das publicações"
+          git push

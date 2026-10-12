@@ -1,0 +1,23 @@
+name: Renovar token do Instagram
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # toda segunda-feira, 06:00 UTC (~03h em Fortaleza) — bem dentro da validade de 60 dias
+  workflow_dispatch: {} # permite rodar manualmente pela aba Actions
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: python refresh_token.py
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
