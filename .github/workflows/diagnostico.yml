@@ -19,3 +19,6 @@ jobs:
           echo "--- /{IG_USER_ID} (o ID gravado)"
           curl -s -G "https://graph.instagram.com/v21.0/$IG_USER_ID" --data-urlencode "fields=username,account_type" --data-urlencode "access_token=$IG_ACCESS_TOKEN"
           echo
+          echo "--- reel publicado (link)"
+          curl -s -G "https://graph.instagram.com/v21.0/18354790393170614" --data-urlencode "fields=permalink,media_type,timestamp" --data-urlencode "access_token=$IG_ACCESS_TOKEN"
+          echo

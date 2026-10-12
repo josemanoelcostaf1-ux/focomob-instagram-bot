@@ -43,6 +43,14 @@ def url(rel):
     return rel if rel.startswith("http") else f"{RAW}/{rel}"
 
 
+def scrub(text):
+    """Tira segredos de mensagens de erro (state.json é público no GitHub)."""
+    for secret in (TOKEN, IG_USER_ID):
+        if secret:
+            text = text.replace(secret, "***")
+    return text
+
+
 def call(method, path, **params):
     params["access_token"] = TOKEN
     if DRY:
@@ -98,12 +106,13 @@ def main():
             cid = build_container(item)
             wait_ready(cid)
             res = call("POST", f"{IG_USER_ID}/media_publish", creation_id=cid)
+            entry.pop("last_error", None)
             entry.update(posted=True, media_id=res.get("id"), posted_at=now.isoformat())
             print(f"[OK] {item['id']} publicado (media {res.get('id')})")
         except Exception as e:  # um erro não derruba o resto da fila, mas o job termina vermelho
             errors += 1
-            entry["last_error"] = str(e)[:500]
-            print(f"[ERRO] {item['id']}: {e}", file=sys.stderr)
+            entry["last_error"] = scrub(str(e))[:500]
+            print(f"[ERRO] {item['id']}: {scrub(str(e))}", file=sys.stderr)
     if not DRY:
         save(STATE_PATH, state)
     if errors:
