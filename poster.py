@@ -82,6 +82,8 @@ def build_container(item):
         return call("POST", f"{IG_USER_ID}/media", media_type="REELS", video_url=url(item["media"]), caption=cap, share_to_feed="true", **extra)["id"]
     if t == "image":
         return call("POST", f"{IG_USER_ID}/media", image_url=url(item["media"]), caption=cap)["id"]
+    if t == "story":  # story: imagem 1080x1920 em JPEG, sem legenda
+        return call("POST", f"{IG_USER_ID}/media", media_type="STORIES", image_url=url(item["media"]))["id"]
     if t == "carousel":
         kids = [call("POST", f"{IG_USER_ID}/media", image_url=url(m), is_carousel_item="true")["id"] for m in item["media"]]
         return call("POST", f"{IG_USER_ID}/media", media_type="CAROUSEL", children=",".join(kids), caption=cap)["id"]
