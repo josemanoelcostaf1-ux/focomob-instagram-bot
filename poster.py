@@ -96,6 +96,19 @@ def main():
         return
 
     queue, state = load(QUEUE_PATH, []), load(STATE_PATH, {})
+    esperar_ate_min = int(os.environ.get("WAIT_MIN", "0"))
+    if esperar_ate_min and not DRY:
+        # O agendador do GitHub atrasa (às vezes horas). Os gatilhos começam ANTES do horário e este trecho espera até o
+        # horário exato do próximo item aprovado que vence dentro de WAIT_MIN minutos, para publicar pontualmente.
+        agora = datetime.datetime.now(datetime.timezone.utc)
+        proximos = [datetime.datetime.fromisoformat(i["date"].replace("Z", "+00:00")) for i in queue
+                    if i.get("approved") and not state.get(i["id"], {}).get("posted")]
+        proximos = [d for d in proximos if agora < d <= agora + datetime.timedelta(minutes=esperar_ate_min)]
+        if proximos:
+            alvo = min(proximos)
+            falta = (alvo - agora).total_seconds() + 3
+            print(f"Esperando {falta:.0f}s até {alvo.isoformat()} para publicar no horário.")
+            time.sleep(max(0, falta))
     now = datetime.datetime.now(datetime.timezone.utc)
     errors = 0
     for item in queue:

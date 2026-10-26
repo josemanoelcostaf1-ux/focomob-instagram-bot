@@ -2,7 +2,13 @@ name: Publicar no Instagram da Focomob
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # confere a cada 15 min se algum item do queue.json venceu
+    # Pontualidade: o agendador do GitHub atrasa e perde execuções. Por isso, antes de cada horário de postagem
+    # (segunda, quarta e sexta, 12h de Fortaleza = 15:00 UTC) há vários gatilhos redundantes; o poster.py espera
+    # até o horário exato (WAIT_MIN). Nos outros dias e horários, confere a cada 15 min (minutos fora do pico).
+    - cron: "20 14 * * 1,3,5"
+    - cron: "40 14 * * 1,3,5"
+    - cron: "52 14 * * 1,3,5"
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch: {} # permite rodar na hora pela aba Actions
 
 concurrency: publicar # nunca duas execuções ao mesmo tempo (evita publicar em duplicidade)
@@ -23,6 +29,7 @@ jobs:
 
       - run: python poster.py
         env:
+          WAIT_MIN: "40"
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
 
