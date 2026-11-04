@@ -20,6 +20,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main # sempre a ponta mais recente (sem isso usa o commit do gatilho, com state.json possivelmente velho)
 
       - uses: actions/setup-python@v5
         with:
@@ -40,4 +42,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add state.json
           git diff --cached --quiet || git commit -m "Atualiza estado das publicações"
-          git push
+          # outras execuções/commits podem ter entrado: reintegra e tenta de novo, para nunca perder o registro
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin main && git push && exit 0
+            sleep $((i * 3))
+          done
+          echo "Não consegui enviar o state.json" >&2
+          exit 1

@@ -12,6 +12,7 @@ import datetime
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import time
 
@@ -37,6 +38,18 @@ def load(path, default):
 
 def save(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def estado_remoto():
+    """Lê o state.json MAIS RECENTE do repositório (o checkout do Actions usa o commit do gatilho, que pode estar velho
+    quando outra execução acabou de publicar). Evita publicar o mesmo item duas vezes. Devolve None se não conseguir."""
+    try:
+        subprocess.run(["git", "fetch", "-q", "origin", BRANCH], check=True, timeout=60, cwd=HERE)
+        out = subprocess.run(["git", "show", f"origin/{BRANCH}:state.json"], check=True, capture_output=True, timeout=30, cwd=HERE)
+        return json.loads(out.stdout.decode("utf-8"))
+    except Exception as e:
+        print(f"[aviso] não consegui ler o estado remoto: {e}", file=sys.stderr)
+        return None
 
 
 def url(rel):
@@ -119,6 +132,18 @@ def main():
             continue
         if datetime.datetime.fromisoformat(item["date"].replace("Z", "+00:00")) > now:
             continue
+        if not DRY:
+            # Trava anti-duplicidade: confere o estado mais recente do repositório imediatamente antes de publicar.
+            remoto = estado_remoto()
+            if remoto is None:
+                errors += 1
+                entry["last_error"] = "estado remoto indisponível; não publiquei por segurança"
+                print(f"[ERRO] {item['id']}: estado remoto indisponível; não publiquei por segurança", file=sys.stderr)
+                continue
+            if remoto.get(item["id"], {}).get("posted"):
+                print(f"{item['id']}: já publicado por outra execução; pulando.")
+                state[item["id"]] = remoto[item["id"]]
+                continue
         try:
             print(f"Publicando {item['id']} ({item['type']})")
             cid = build_container(item)
@@ -127,6 +152,8 @@ def main():
             entry.pop("last_error", None)
             entry.update(posted=True, media_id=res.get("id"), posted_at=now.isoformat())
             print(f"[OK] {item['id']} publicado (media {res.get('id')})")
+            if not DRY:
+                save(STATE_PATH, state)  # grava já, para o passo seguinte do workflow enviar o estado sem demora
         except Exception as e:  # um erro não derruba o resto da fila, mas o job termina vermelho
             errors += 1
             entry["last_error"] = scrub(str(e))[:500]
